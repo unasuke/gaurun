@@ -89,31 +89,73 @@ func enqueueNotifications(notifications []RequestGaurunNotification) {
 func pushNotificationIos(req RequestGaurunNotification) error {
 	LogError.Debug("START push notification for iOS")
 
-	service := NewApnsServiceHttp2(APNSClient)
-
 	token := req.Tokens[0]
 
-	headers := NewApnsHeadersHttp2(&req)
-	payload := NewApnsPayloadHttp2(&req)
+	if ConfGaurun.Ios.UseFCM {
+		// Use FCM
+		data := map[string]interface{}{"message": req.Message}
+		if len(req.Extend) > 0 {
+			for _, extend := range req.Extend {
+				data[extend.Key] = extend.Value
+			}
+		}
 
-	stime := time.Now()
-	err := ApnsPushHttp2(token, service, headers, payload)
+		msg := gcm.NewMessage(data, token)
+		msg.CollapseKey = req.CollapseKey
+		msg.DelayWhileIdle = req.DelayWhileIdle
+		msg.TimeToLive = req.TimeToLive
 
-	etime := time.Now()
-	ptime := etime.Sub(stime).Seconds()
+		stime := time.Now()
+		resp, err := IosFCMClient.SendNoRetry(msg)
+		etime := time.Now()
+		ptime := etime.Sub(stime).Seconds()
+		if err != nil {
+			atomic.AddInt64(&StatGaurun.Ios.PushError, 1)
+			LogPush(req.ID, StatusFailedPush, token, ptime, req, err)
+			return err
+		}
 
-	if err != nil {
-		atomic.AddInt64(&StatGaurun.Ios.PushError, 1)
-		LogPush(req.ID, StatusFailedPush, token, ptime, req, err)
-		return err
+		if resp.Failure > 0 {
+			atomic.AddInt64(&StatGaurun.Ios.PushSuccess, int64(resp.Success))
+			atomic.AddInt64(&StatGaurun.Ios.PushError, int64(resp.Failure))
+			LogPush(req.ID, StatusFailedPush, token, ptime, req, errors.New(resp.Results[0].Error))
+			return errors.New(resp.Results[0].Error)
+		}
+
+		LogPush(req.ID, StatusSucceededPush, token, ptime, req, nil)
+
+		atomic.AddInt64(&StatGaurun.Android.PushSuccess, int64(len(req.Tokens)))
+		LogError.Debug("END push notification for Android")
+
+		return nil
+	} else {
+		// Use APNs
+
+		service := NewApnsServiceHttp2(APNSClient)
+
+		headers := NewApnsHeadersHttp2(&req)
+		payload := NewApnsPayloadHttp2(&req)
+
+		stime := time.Now()
+		err := ApnsPushHttp2(token, service, headers, payload)
+
+		etime := time.Now()
+		ptime := etime.Sub(stime).Seconds()
+
+		if err != nil {
+			atomic.AddInt64(&StatGaurun.Ios.PushError, 1)
+			LogPush(req.ID, StatusFailedPush, token, ptime, req, err)
+			return err
+		}
+
+		atomic.AddInt64(&StatGaurun.Ios.PushSuccess, 1)
+		LogPush(req.ID, StatusSucceededPush, token, ptime, req, nil)
+
+		LogError.Debug("END push notification for iOS")
+
+		return nil
 	}
 
-	atomic.AddInt64(&StatGaurun.Ios.PushSuccess, 1)
-	LogPush(req.ID, StatusSucceededPush, token, ptime, req, nil)
-
-	LogError.Debug("END push notification for iOS")
-
-	return nil
 }
 
 func pushNotificationAndroid(req RequestGaurunNotification) error {

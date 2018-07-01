@@ -47,6 +47,8 @@ type SectionIos struct {
 	KeepAliveTimeout int    `toml:"keepalive_timeout"`
 	KeepAliveConns   int    `toml:"keepalive_conns"`
 	Topic            string `toml:"topic"`
+	ApiKey           string `toml:"apikey"`
+	UseFCM           bool   `toml:"use_fcm"`
 }
 
 type SectionLog struct {

@@ -55,6 +55,8 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 	assert.Equal(suite.T(), suite.ConfGaurunDefault.Ios.KeepAliveTimeout, 90)
 	assert.Equal(suite.T(), int64(suite.ConfGaurunDefault.Ios.KeepAliveConns), suite.ConfGaurunDefault.Core.WorkerNum)
 	assert.Equal(suite.T(), suite.ConfGaurunDefault.Ios.Topic, "")
+	assert.Equal(suite.T(), suite.ConfGaurunDefault.Ios.ApiKey, "")
+	assert.Equal(suite.T(), suite.ConfGaurunDefault.Ios.UseFCM, false)
 	// Log
 	assert.Equal(suite.T(), suite.ConfGaurunDefault.Log.AccessLog, "stdout")
 	assert.Equal(suite.T(), suite.ConfGaurunDefault.Log.ErrorLog, "stderr")

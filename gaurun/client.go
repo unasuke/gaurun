@@ -67,3 +67,27 @@ func InitAPNSClient() error {
 	}
 	return nil
 }
+
+func InitIosFCMClient() error {
+	var err error
+	IosFCMClient, err = gcm.NewClient(gcm.FCMSendEndpoint, ConfGaurun.Ios.ApiKey)
+	if err != nil {
+		return err
+	}
+
+	transport := &http.Transport{
+		MaxIdleConnsPerHost: ConfGaurun.Ios.KeepAliveConns,
+		Dial: (&net.Dialer{
+			Timeout:   time.Duration(ConfGaurun.Ios.Timeout) * time.Second,
+			KeepAlive: time.Duration(keepAliveInterval(ConfGaurun.Ios.KeepAliveTimeout)) * time.Second,
+		}).Dial,
+		IdleConnTimeout: time.Duration(ConfGaurun.Ios.KeepAliveTimeout) * time.Second,
+	}
+
+	IosFCMClient.Http = &http.Client{
+		Transport: transport,
+		Timeout:   time.Duration(ConfGaurun.Ios.Timeout) * time.Second,
+	}
+
+	return nil
+}

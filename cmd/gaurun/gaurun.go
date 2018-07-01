@@ -123,8 +123,14 @@ func main() {
 	}
 
 	if gaurun.ConfGaurun.Ios.Enabled {
-		if err := gaurun.InitAPNSClient(); err != nil {
-			gaurun.LogSetupFatal(fmt.Errorf("failed to init http client for APNs: %v", err))
+		if gaurun.ConfGaurun.Ios.UseFCM {
+			if err := gaurun.InitIosFCMClient(); err != nil {
+				gaurun.LogSetupFatal(fmt.Errorf("failed to init http client for iOS FCM: %v", err))
+			}
+		} else {
+			if err := gaurun.InitAPNSClient(); err != nil {
+				gaurun.LogSetupFatal(fmt.Errorf("failed to init http client for APNs: %v", err))
+			}
 		}
 	}
 	gaurun.InitStat()

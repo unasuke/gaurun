@@ -18,8 +18,9 @@ var (
 	// Stat for Gaurun
 	StatGaurun StatApp
 	// http client for APNs and GCM/FCM
-	APNSClient *http.Client
-	GCMClient  *gcm.Client
+	APNSClient   *http.Client
+	GCMClient    *gcm.Client
+	IosFCMClient *gcm.Client
 	// access and error logger
 	LogAccess *zap.Logger
 	LogError  *zap.Logger

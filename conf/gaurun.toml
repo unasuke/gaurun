@@ -25,6 +25,8 @@ timeout = 5
 keepalive_timeout = 30
 keepalive_conns = 6
 retry_max = 1
+apikey = "apikey for FCM"
+use_fcm = false
 
 [log]
 access_log = "stdout"
